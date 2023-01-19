@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const userRoutes = require("./routes/users");
 dotenv.config();
 
 const app = express();
@@ -18,6 +19,8 @@ mongoose
   .catch((err) => {
     console.log("Unable to connect to Database.", err);
   });
+
+app.use("/users", userRoutes);
 
 const PORT = process.env.PORT || 3000;
 
