@@ -23,7 +23,7 @@ const transfer = async (req, res) => {
     if (beneficiary === benefactor) {
       return res.status(400).json({
         status: false,
-        message: "You cannot sent money to yourself",
+        message: "You cannot sent funds to yourself",
       });
     }
 
@@ -66,6 +66,9 @@ const transfer = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Transfer successful",
+      transactions: transferResult.map((result) => {
+        return result.data.transaction[0];
+      }),
     });
   } catch (err) {
     await session.abortTransaction();
@@ -97,19 +100,19 @@ const deposit = async (req, res) => {
       });
     }
 
-    const transferResult = await Promise.all([
+    const depositResult = await Promise.all([
       creditAccount({
         amount,
         username: user,
         purpose: "deposit",
         reference,
         summary,
-        transactionSummary: `DEPOSIT. TRANSACTION REF:${reference} `,
+        transactionSummary: `DEPOSIT TO: ${user}. TRANSACTION REF:${reference} `,
         session,
       }),
     ]);
 
-    const failedTransactions = transferResult.filter(
+    const failedTransactions = depositResult.filter(
       (result) => result.status !== true
     );
     if (failedTransactions.length) {
@@ -127,6 +130,7 @@ const deposit = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Deposit successful",
+      transaction: depositResult[0].data.transaction,
     });
   } catch (err) {
     await session.abortTransaction();
@@ -158,19 +162,19 @@ const withdraw = async (req, res) => {
       });
     }
 
-    const transferResult = await Promise.all([
+    const withdrawalResult = await Promise.all([
       debitAccount({
         amount,
         username: user,
         purpose: "withdrawal",
         reference,
         summary,
-        transactionSummary: `WITHDRAWAL. TRANSACTION REF:${reference} `,
+        transactionSummary: `WITHDRAW FROM: ${user}. TRANSACTION REF:${reference} `,
         session,
       }),
     ]);
 
-    const failedTransactions = transferResult.filter(
+    const failedTransactions = withdrawalResult.filter(
       (result) => result.status !== true
     );
     if (failedTransactions.length) {
@@ -188,6 +192,7 @@ const withdraw = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Withdrawal successful",
+      transaction: withdrawalResult[0].data.transaction,
     });
   } catch (err) {
     await session.abortTransaction();
