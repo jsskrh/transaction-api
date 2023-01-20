@@ -7,6 +7,12 @@ dotenv.config();
 const createUser = async (req, res) => {
   try {
     const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({
+        status: false,
+        message: "username and password required",
+      });
+    }
 
     const userExists = await Users.findOne({ username });
     if (userExists) {
@@ -19,7 +25,6 @@ const createUser = async (req, res) => {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
     const result = await Users.create({ username, password: hashedPassword });
-    console.log(result);
     return res.status(201).json({
       status: true,
       message: "Users created successfully",
@@ -34,9 +39,16 @@ const createUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
+  if (!req.body.username || !req.body.password) {
+    return res.status(401).json({
+      status: false,
+      message: "username and password required",
+    });
+  }
+
   const user = await Users.findOne({ username: req.body.username });
   if (user == null) {
-    return res.status(400).send("User does not exist.");
+    return res.status(401).send("User does not exist.");
   }
   try {
     if (await bcrypt.compare(req.body.password, user.password)) {
@@ -47,7 +59,7 @@ const loginUser = async (req, res) => {
       user.token = accessToken;
       res.status(200).send(user);
     } else {
-      res.status(400).send("Invalid Credentials");
+      res.status(401).send("Invalid Credentials");
     }
   } catch (error) {
     res.status(500).send(error);
