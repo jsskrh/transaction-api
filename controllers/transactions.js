@@ -13,7 +13,7 @@ const transfer = async (req, res) => {
         Math.pow(10, 12) + Math.random() * 9 * Math.pow(10, 12)
       ).toString(36);
     const benefactor = req.user.username;
-    if (!beneficiary && !benefactor && !amount && !summary) {
+    if (!beneficiary || !benefactor || !amount || !summary) {
       return res.status(400).json({
         status: false,
         message:
@@ -90,7 +90,7 @@ const deposit = async (req, res) => {
       ).toString(36);
     const user = req.user.username;
     const summary = `Deposit of ${amount}`;
-    if (!user && !amount) {
+    if (!user || !amount) {
       return res.status(400).json({
         status: false,
         message: "Please login and provide the following details: amount",
@@ -139,4 +139,65 @@ const deposit = async (req, res) => {
   }
 };
 
-module.exports = { transfer, deposit };
+const withdraw = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { amount } = req.body;
+    const reference =
+      Date.now().toString(36) +
+      Math.floor(
+        Math.pow(10, 12) + Math.random() * 9 * Math.pow(10, 12)
+      ).toString(36);
+    const user = req.user.username;
+    const summary = `Withdrawal of ${amount}`;
+    if (!user || !amount) {
+      return res.status(400).json({
+        status: false,
+        message: "Please login and provide the following details: amount",
+      });
+    }
+
+    const transferResult = await Promise.all([
+      debitAccount({
+        amount,
+        username: user,
+        purpose: "withdrawal",
+        reference,
+        summary,
+        transactionSummary: `WITHDRAWAL. TRANSACTION REF:${reference} `,
+        session,
+      }),
+    ]);
+
+    const failedTransactions = transferResult.filter(
+      (result) => result.status !== true
+    );
+    if (failedTransactions.length) {
+      const errors = failedTransactions.map((a) => a.message);
+      await session.abortTransaction();
+      return res.status(400).json({
+        status: false,
+        message: errors,
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      status: true,
+      message: "Withdrawal successful",
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
+      status: false,
+      message: `Unable to withdraw funds. Please try again. \n Error: ${err}`,
+    });
+  }
+};
+
+module.exports = { transfer, deposit, withdraw };
