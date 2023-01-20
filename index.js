@@ -2,14 +2,18 @@ const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/users");
+const transactionRoutes = require("./routes/transactions");
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
+const uri =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/transaction_api";
+
 mongoose.set("strictQuery", false);
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -20,7 +24,8 @@ mongoose
     console.log("Unable to connect to Database.", err);
   });
 
-app.use("/users", userRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 const PORT = process.env.PORT || 3000;
 
