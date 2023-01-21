@@ -27,8 +27,4 @@ mongoose
 app.use("/api/users", userRoutes);
 app.use("/api/transactions", transactionRoutes);
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+module.exports = app;
