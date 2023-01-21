@@ -1,4 +1,3 @@
-const Transactions = require("../models/transactions");
 const mongoose = require("mongoose");
 const { creditAccount, debitAccount } = require("../utils/transactions");
 
@@ -130,7 +129,7 @@ const deposit = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Deposit successful",
-      transaction: depositResult[0].data.transaction,
+      transaction: depositResult[0].data.transaction[0],
     });
   } catch (err) {
     await session.abortTransaction();
@@ -192,7 +191,7 @@ const withdraw = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Withdrawal successful",
-      transaction: withdrawalResult[0].data.transaction,
+      transaction: withdrawalResult[0].data.transaction[0],
     });
   } catch (err) {
     await session.abortTransaction();
