@@ -66,4 +66,20 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, loginUser };
+const getUser = async (req, res) => {
+  try {
+    if (req.user.username !== req.params.username) {
+      return res.status(401).json({
+        status: false,
+        message: "not authorised to do that.",
+      });
+    }
+
+    const user = await Users.findOne({ username: req.user.username });
+    res.status(201).send(user);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+module.exports = { createUser, loginUser, getUser };
