@@ -1,13 +1,7 @@
 const request = require("supertest");
 const Users = require("./models/users");
-const auth = require("./middleware/index");
-const jwt = require("jsonwebtoken");
 const app = require("./app");
 const mongoose = require("mongoose");
-// const sinon = require("sinon");
-
-// const originalAuthToken = auth;
-// const authStub = sinon.stub(auth);
 
 afterAll(async () => {
   await mongoose.connection.close();
@@ -15,9 +9,6 @@ afterAll(async () => {
 
 describe("POST /api/users", () => {
   describe("given a username and password", () => {
-    // should save the username and password to database
-    // should return with a json object containing the user id
-
     beforeEach(async () => {
       await Users.deleteOne({ username: "test0" });
     });
@@ -138,7 +129,7 @@ describe("POST /api/transactions/deposit", () => {
 
     test("should respond with a status code 201", async () => {
       const response = await request(app)
-        .post("/api/transaction/deposit")
+        .post("/api/transactions/deposit")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 500,
@@ -148,7 +139,7 @@ describe("POST /api/transactions/deposit", () => {
 
     test("transaction type should be 'CR' and purpose should be 'deposit'", async () => {
       const response = await request(app)
-        .post("/api/transaction/deposit")
+        .post("/api/transactions/deposit")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 500,
@@ -165,14 +156,14 @@ describe("POST /api/transactions/deposit", () => {
 
     test("balance should equal 1000", async () => {
       const response = await request(app)
-        .post("/api/transaction/deposit")
+        .post("/api/transactions/deposit")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 500,
         });
       expect(response.body).toHaveProperty(
         ["transaction", "balanceAfter", "$numberDecimal"],
-        1500
+        "1500"
       );
     });
   });
@@ -180,7 +171,7 @@ describe("POST /api/transactions/deposit", () => {
   describe("when not logged in", () => {
     test("should respond with a status code 404", async () => {
       const response = await request(app)
-        .post("/api/transaction/deposit")
+        .post("/api/transactions/deposit")
         .send({
           amount: 1000,
         });
@@ -202,7 +193,7 @@ describe("POST /api/transactions/withdraw", () => {
 
     test("should respond with a status code 201", async () => {
       const response = await request(app)
-        .post("/api/transaction/withdraw")
+        .post("/api/transactions/withdraw")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 100,
@@ -212,7 +203,7 @@ describe("POST /api/transactions/withdraw", () => {
 
     test("transaction type should be 'DR' and purpose should be 'withdrawal'", async () => {
       const response = await request(app)
-        .post("/api/transaction/withdraw")
+        .post("/api/transactions/withdraw")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 500,
@@ -229,14 +220,14 @@ describe("POST /api/transactions/withdraw", () => {
 
     test("balance should equal 1000", async () => {
       const response = await request(app)
-        .post("/api/transaction/withdraw")
+        .post("/api/transactions/withdraw")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 100,
         });
       expect(response.body).toHaveProperty(
         ["transaction", "balanceAfter", "$numberDecimal"],
-        800
+        "800"
       );
     });
   });
@@ -253,7 +244,7 @@ describe("POST /api/transactions/withdraw", () => {
 
     test("should respond with a status code 400", async () => {
       const response = await request(app)
-        .post("/api/transaction/withdraw")
+        .post("/api/transactions/withdraw")
         .set("Authorization", `Bearer ${token}`)
         .send({
           amount: 1000,
@@ -265,7 +256,7 @@ describe("POST /api/transactions/withdraw", () => {
   describe("when not logged in", () => {
     test("should respond with a status code 404", async () => {
       const response = await request(app)
-        .post("/api/transaction/withdraw")
+        .post("/api/transactions/withdraw")
         .send({
           amount: 200,
         });
@@ -278,6 +269,7 @@ describe("POST /api/transactions/transfer", () => {
   describe("when logged in", () => {
     let token;
     beforeAll(async () => {
+      await Users.deleteOne({ username: "test1" });
       const response = await request(app).post("/api/users/login").send({
         username: "test0",
         password: "test0",
@@ -291,7 +283,7 @@ describe("POST /api/transactions/transfer", () => {
 
     test("should respond with a status code 201", async () => {
       const response = await request(app)
-        .post("/api/transaction/transfer")
+        .post("/api/transactions/transfer")
         .set("Authorization", `Bearer ${token}`)
         .send({
           beneficiary: "test1",
@@ -303,7 +295,7 @@ describe("POST /api/transactions/transfer", () => {
 
     test("user balance should equal 600 and beneficiary balance should be 200", async () => {
       const response = await request(app)
-        .post("/api/transaction/transfer")
+        .post("/api/transactions/transfer")
         .set("Authorization", `Bearer ${token}`)
         .send({
           beneficiary: "test1",
@@ -312,11 +304,11 @@ describe("POST /api/transactions/transfer", () => {
         });
       expect(response.body).toHaveProperty(
         ["transactions", 0, "balanceAfter", "$numberDecimal"],
-        600
+        "600"
       );
       expect(response.body).toHaveProperty(
         ["transactions", 1, "balanceAfter", "$numberDecimal"],
-        200
+        "200"
       );
     });
   });
@@ -333,7 +325,7 @@ describe("POST /api/transactions/transfer", () => {
 
     test("should respond with a status code 400", async () => {
       const response = await request(app)
-        .post("/api/transaction/transfer")
+        .post("/api/transactions/transfer")
         .set("Authorization", `Bearer ${token}`)
         .send({
           beneficiary: "test1",
@@ -347,7 +339,7 @@ describe("POST /api/transactions/transfer", () => {
   describe("when not logged in", () => {
     test("should respond with a status code 404", async () => {
       const response = await request(app)
-        .post("/api/transaction/transfer")
+        .post("/api/transactions/transfer")
         .send({
           beneficiary: "test1",
           summary: "Test transaction",

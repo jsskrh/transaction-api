@@ -1,6 +1,18 @@
 const jwt = require("jsonwebtoken");
 
 function authToken(req, res, next) {
+  if (
+    !req.body.token &&
+    !req.query.token &&
+    !req.headers["x-access-token"] &&
+    !req.headers["authorization"]
+  ) {
+    return res.status(404).json({
+      status: false,
+      message: "User not authenticated",
+    });
+  }
+
   const authHeader = req.headers["authorization"];
 
   const token =

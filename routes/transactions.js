@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const auth = require("../middleware/index");
-
 const Transactions = require("../controllers/transactions");
+const authToken = require("../middleware/index");
 
-router.post("/transfer", auth, Transactions.transfer);
-router.post("/deposit", auth, Transactions.deposit);
-router.post("/withdraw", auth, Transactions.withdraw);
+router.post("/transfer", authToken, Transactions.transfer);
+router.post("/deposit", authToken, Transactions.deposit);
+router.post("/withdraw", authToken, Transactions.withdraw);
 
 module.exports = router;
